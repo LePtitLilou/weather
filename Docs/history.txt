@@ -1,0 +1,26 @@
+Starting Point:
+http://rayshobby.net/?p=8827
+
+So:
+Bought a RFM 433MHz:
+http://www.amazon.com/gp/product/B00HEDRHG6/ref=oh_aui_detailpage_o00_s00?ie=UTF8&psc=1
+Bought a breadboard (really need it?)
+http://www.amazon.com/gp/product/B008A9UORM/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1
+
+Got RFM Realized I need power.
+
+Bought battery-based one at RadioShack but 4.5 or 6V (same with AC/DC ones they had)
+
+Q: Can I power with 4.5V? If not is 6V going to kill it?
+
+Should I look into:
+http://rayshobby.net/cart/aasaver
+
+As mentioned at:
+https://rayshobby.net/?p=3381
+
+Simple batteries powered on breadboard seems to work fine, got signal in linein on my mac
+
+now that electroincs seems to wrk, needs to read stream in and crack the code.
+
+
