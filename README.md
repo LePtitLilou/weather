@@ -1,4 +1,9 @@
 weather
 =======
+Code to read Acurite Weather Station Streams.
 
-Code to read Acurtie Weather Station Streams.
+Requirements
+============
+pyaudio
+numpy
+
