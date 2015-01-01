@@ -20,6 +20,7 @@ for c1 in [512,2048,4096,8192]:
       st=""
       l=0
       for i in range(0,int(44100/1024*2)):
+        print "chunk:",c2,stream.get_read_available()
         data = stream.read(c2)
         st+=data
         l+=c2
