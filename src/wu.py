@@ -2,13 +2,12 @@ import json
 import numpy
 import cdtime
 import cdms2
+import requests
+import os
+
 cdms2.setNetcdfDeflateFlag(0)
 cdms2.setNetcdfDeflateLevelFlag(0)
 cdms2.setNetcdfShuffleFlag(0)
-import requests
-import os
-import datetime
-import time
 
 # Weather underground UTZ ref date (epoch)
 ref_date = cdtime.comptime(1970)
@@ -126,8 +125,8 @@ def get_history(year, month, day, station_id=None, pathout=None, key=None):
         key = "606f3f6977348613"
     date = "%.4i%.2i%.2i" % (year, month, day)
     if pathout is None:
-        pathout= os.path.join(os.path.expanduser("~/"),"Weather","history")
-    name = os.path.join(pathout,station_id, date+".json")
+        pathout = os.path.join(os.path.expanduser("~/"), "Weather", "history")
+    name = os.path.join(pathout, station_id, date + ".json")
     f = open(name, "w")
     url = "https://api-ak.wunderground.com/api/%s/history_%s/units:english/v:2.0/q/pws:%s.json" % (
         key, date, station_id)
