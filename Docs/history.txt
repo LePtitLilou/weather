@@ -23,4 +23,7 @@ Simple batteries powered on breadboard seems to work fine, got signal in linein 
 
 now that electroincs seems to wrk, needs to read stream in and crack the code.
 
+2016-12
+-------
 
+Failed reading in streams, falling back on getting the data backed up on Weathe rUnderground it's 15mn or so data, not so bad.
