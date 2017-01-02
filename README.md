@@ -1,9 +1,8 @@
 weather
 =======
-Code to read Acurite Weather Station Streams.
+Code to read Weather Station Streams.
 
-Requirements
-============
-pyaudio
-numpy
+Currently focus is on retrieving data from
+[http://weatherunderground.com](Weather Underground) 
+
 
