@@ -119,12 +119,14 @@ def month2cdms(year, month, variables=["temperature"], station=None):
     f.close()
 
 
-def get_history(year, month, day, station_id=None, session=None,
+def get_history(year, month, day, station_id=None, pathout=None, session=None,
                 key="606f3f6977348613", loggly="25e68a9b-b928-4129-b536-cc3112ee71c3"):
     if station_id is None:
         station_id = mystation(year)
     date = "%.4i%.2i%.2i" % (year, month, day)
-    name = "history/%s/%s.json" % (station_id, date)
+    if pathout is None:
+        pathout= os.path.join(os.path.expanduser("~/"),"Weather","history")
+    name = os.path.join(pathout,station_id, date+".json")
     f = open(name, "w")
     cookies = {"logglytrackingsession": loggly}
     url = "https://api-ak.wunderground.com/api/%s/history_%s/units:english/v:2.0/q/pws:%s.json" % (
