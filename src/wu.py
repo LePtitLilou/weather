@@ -119,7 +119,7 @@ def month2cdms(year, month, variables=["temperature"], station=None):
     f.close()
 
 
-def get_history(year, month, day, station_id=None, pathout=None, session=None, key=None):
+def get_history(year, month, day, station_id=None, pathout=None, key=None):
     if station_id is None:
         station_id = mystation(year)
     if key is None:
@@ -131,9 +131,7 @@ def get_history(year, month, day, station_id=None, pathout=None, session=None, k
     f = open(name, "w")
     url = "https://api-ak.wunderground.com/api/%s/history_%s/units:english/v:2.0/q/pws:%s.json" % (
         key, date, station_id)
-    if session is None:
-        session = requests.Session()
-    r = session.get(url)
+    r = requests.get(url)
     f.write(r.content)
     f.close()
     if not r.status_code == 200:
