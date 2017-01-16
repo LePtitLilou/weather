@@ -1,0 +1,27 @@
+package:
+    name: lpl_weather
+    version: 0.9
+
+source:
+    git_rev: master
+    git_url: git://github.com/leptitlilou/weather
+
+build:
+  number: 0
+  noarch_python: True
+ 
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - cdms2
+      datetime
+    - numpy
+
+about:
+    home:  http://gitub.com/leptitlilou/weather
+
+
+
