@@ -21,12 +21,12 @@ units = {
 
 
 def mean(x, y, ref_units, rk=7, dx=60.):
-    t1 = cdtime.reltime(x[0], units)
+    t1 = cdtime.reltime(x[0], ref_units)
     t1c = t1.tocomp()
     t0 = cdtime.comptime(t1c.year, t1c.month, t1c.day).torel(units).value
     te = cdtime.comptime(
         t1c.year, t1c.month, t1c.day).add(
-        1, cdtime.Day).torel(units).value
+        1, cdtime.Day).torel(ref_units).value
     X = x - float(t0)
     poly = numpy.polyfit(X, y, rk)
     P = numpy.poly1d(poly)
