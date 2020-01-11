@@ -16,9 +16,11 @@ requirements:
     - setuptools
   run:
     - python
-    - cdms2
-      datetime
+    - datetime
     - numpy
+    - requests
+    - tqdm
+    - json
 
 about:
     home:  http://gitub.com/leptitlilou/weather
