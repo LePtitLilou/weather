@@ -21,6 +21,7 @@ requirements:
     - requests
     - tqdm
     - json
+    - matplotlib
 
 about:
     home:  http://gitub.com/leptitlilou/weather

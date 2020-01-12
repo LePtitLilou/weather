@@ -1,15 +1,10 @@
 import json
 import numpy
-# import cdtime
-# import cdms2
 import requests
 import os
 import datetime
 from tqdm.notebook import tqdm
-
-# cdms2.setNetcdfDeflateFlag(0)
-# cdms2.setNetcdfDeflateLevelFlag(0)
-# cdms2.setNetcdfShuffleFlag(0)
+import matplotlib.pyplot as plt
 
 # Weather underground UTZ ref date (epoch)
 ref_date = datetime.date(1979, 1, 1)
@@ -40,20 +35,6 @@ def mean(x, y, ref_units, rk=7, dx=60.):
     return numpy.trapz(ys, dx=dx) / (te - t0)
 
 
-def retrieve(obs, variable):
-    x = []
-    y = []
-    # 59.6 F is weather underground average for Feb 26th, 2016
-    for o in obs:
-        try:
-            t = float(o[variable])
-            x.append(float(o["date"]["epoch"]))
-            y.append(t)
-        except:
-            pass
-    return numpy.array(x), numpy.array(y)
-
-
 def mystation(year):
     if year < 2016:
         station = "KCALIVER55"
@@ -62,62 +43,32 @@ def mystation(year):
     return station
 
 
-def day2cdms(year, month, day, variables=["temperature"], station=None):
-    print("\tProcessing: %.4i-%.2i-%.2i" % (year, month, day))
-    if isinstance(variables, basestring):
-        variables = [variables]
-    date = "%.4i%.2i%.2i" % (year, month, day)
-    fname = date + ".json"
-    if station is None:
-        station = mystation(year)
-    fname = os.path.join("history", station, fname)
-    if not os.path.exists(fname):  # No data aborting
-        print("\t\tNo json")
-        return []
-    f = open(fname)
-    data = json.load(f)
-    f.close()
-    tz_offset_hours = data["response"]["date"]["tz_offset_hours"]
-    ref = ref_date.add(tz_offset_hours, cdtime.Hours)
-    ref_units = "seconds since %s" % str(ref)
-    history = data["history"]["days"]
-    if len(history) == 0:  # no data in file
-        print("\t\tNo Data in JSON")
-        return []
-    obs = history[0]["observations"]
-    out = []
-    for v in variables:
-        x, y = retrieve(obs, v)
-        if v == variables[0]:
-            tim = cdms2.createAxis(numpy.array(x))
-            tim.units = ref_units
-            tim.designateTime()
-            tim.id = "time"
-        y = cdms2.MV2.array(y)
-        y.setAxis(0, tim)
-        y.id = v
-        y.units = units[v]
-        out.append(y)
-    print("\t\tNumber of records: %i" % len(x))
+def samples_to_numpy(data, variables = None):
+    first = data[0]
+    data_variables = first["imperial"].keys()
+    if variables is None:
+        variables = data_variables
+    out = {}
+    for var in variables:
+        if not var in data_variables:
+            raise("Variable {} is unavailable")
+        out[var] = []
+    out["times"]  = []
+    out["epoch"]  = []
+    #print(first.keys())
+    out["station_id"] = first["stationID"] 
+    for sample in data:
+        out["times"].append(numpy.datetime64(sample["obsTimeLocal"]))
+        out["epoch"].append(sample["epoch"])
+        measurements = sample["imperial"]
+        #print(measurements.keys())
+        for v in variables:
+            out[v].append(measurements[v])
+            if out[v][-1] is None:
+                out[v][-1] = -999
+    for v in out:
+        out[v] = numpy.array(out[v])
     return out
-
-
-def month2cdms(year, month, variables=["temperature"], station=None):
-    if station is None:
-        station = mystation(year)
-    out = "%.4i%.2i_%s.nc" % (year, month, station)
-    print("Out file:", out)
-    f = cdms2.open(out, "w")
-    day = cdtime.comptime(year, month)
-    while day.month == month:
-        day_var = day2cdms(year, month, day.day, variables, station)
-        if day_var == []:  # No data
-            day = day.add(1, cdtime.Day)
-            continue
-        for v in day_var:
-            f.write(v)
-        day = day.add(1, cdtime.Day)
-    f.close()
 
 
 class PWS():
@@ -139,27 +90,61 @@ class PWS():
         self.dump=dump
         self.sampling=sampling
         self.format = "json"
+        self.tqdm = None
+        self.ax = None
+        self.fig = None
 
-    def fetch_range(self, year1, month1, day1, year2 = None, month2 = None, day2 = None, pathout = None):
+
+    def init_matplotlib(self):
+        self.fig, self.ax = plt.subplots()
+        self.ax.grid(True, linestyle="dotted", color="grey", linewidth=.5)
+
+    def plot(self, x, y,
+             color='blk',
+             marker='o',
+             ms=0,
+             mfc=None,
+             linestyle='solid',
+             linewidth=1,
+             mec=None,
+             mew=1,
+             overlay=False):
+        if mfc is None:
+            mfc = color
+        if mec is None:
+            mec = color
+        w = numpy.argwhere(numpy.logical_not(numpy.equal(y,-999)))
+        x = x[w][:,0]
+        y = y[w][:,0]
+        if not overlay:
+            self.init_matplotlib()
+        if self.ax is None:
+            self.init_matplotlib()
+        self.ax.plot(x,y,
+                marker=marker, 
+                linestyle=linestyle, 
+                linewidth=linewidth,
+                mfc=mfc,
+                mec=mec,
+                mew=mew,
+                ms=ms,
+                color=color, 
+            )
+        self.fig.autofmt_xdate()
+
+    def fetch_range(self, start, end=None, pathout=None):
         """retrieve a range of days"""
-        start=datetime.date(year1, month1, day1)
-        today=datetime.date.today()
-        if year2 is None:
-            year2=today.year
-        if month2 is None:
-            month2=today.month
-        if day2 is None:
-            day2=tooday.day
-        end=datetime.date(year2, month2, day2)
+        if end is None:
+            end =datetime.date.today()
         day=datetime.timedelta(days = 1)
         delta= end - start
         if end < start:
             raise ValueError("End date must be greater than first date")
 
-        fecthed=0
-        for i in tdqm(range(delta.days)):
+        fetched=0
+        for i in tqdm(range(delta.days)):
             try:
-                name, _= self.fecth_day(start.year, start.month, start.day, pathout)
+                name, _ = self.fetch_day(start, pathout)
             except Exception as err:
                 print("Failure for date:", start, err)
             if fetched == 1:
@@ -169,22 +154,17 @@ class PWS():
         print("Total fetched successfully:", fetched)
         print("Expected to fetch:", delta.days)
 
-    def fetch_day(self, year = None, month = None, day = None, pathout = None):
+    def fetch_day(self, day = None, pathout = None):
         "download data for a day"
-        today=datetime.date.today()
 
-        if year is None:
-            year=today.year
-        if month is None:
-            month=today.month
         if day is None:
-            day=tooday.day
+            day=datetime.date.today()
 
         station_id=self.station_id
         if station_id is None:
-            station_id=mystation(year)
+            station_id=mystation(day.year)
 
-        date=f"{year}{month:02d}{day:02d}"
+        date=f"{day.year}{day.month:02d}{day.day:02d}"
 
         if pathout is None:
             pathout=os.path.join(os.path.expanduser(
