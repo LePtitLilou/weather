@@ -5,6 +5,9 @@ import os
 import datetime
 from tqdm.notebook import tqdm
 import matplotlib.pyplot as plt
+import h5py
+from .utils import samples_to_numpy, numpy_to_hdf5  # noqa
+
 
 # Weather underground UTZ ref date (epoch)
 ref_date = datetime.date(1979, 1, 1)
@@ -41,34 +44,6 @@ def mystation(year):
     else:
         station = "KCALIVER78"
     return station
-
-
-def samples_to_numpy(data, variables = None):
-    first = data[0]
-    data_variables = first["imperial"].keys()
-    if variables is None:
-        variables = data_variables
-    out = {}
-    for var in variables:
-        if not var in data_variables:
-            raise("Variable {} is unavailable")
-        out[var] = []
-    out["times"]  = []
-    out["epoch"]  = []
-    #print(first.keys())
-    out["station_id"] = first["stationID"] 
-    for sample in data:
-        out["times"].append(numpy.datetime64(sample["obsTimeLocal"]))
-        out["epoch"].append(sample["epoch"])
-        measurements = sample["imperial"]
-        #print(measurements.keys())
-        for v in variables:
-            out[v].append(measurements[v])
-            if out[v][-1] is None:
-                out[v][-1] = -999
-    for v in out:
-        out[v] = numpy.array(out[v])
-    return out
 
 
 class PWS():
@@ -185,5 +160,4 @@ class PWS():
         if self.dump:
             with open(name, "w") as f:
                 json.dump(data, f)
-        print("\t\t Success")
         return name, data
